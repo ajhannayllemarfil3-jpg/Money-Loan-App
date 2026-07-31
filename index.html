@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Money Loan</title>
+<style>
+  :root{
+    --blue-1:#2f3fe0;
+    --blue-2:#4b5eea;
+    --blue-dark:#232f9e;
+    --purple:#8a5cf6;
+    --purple-dark:#6c3ce0;
+    --card-bg:#eef0f4;
+    --text-light:#e8eaff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#1b1f2e;
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .phone{
+    width:360px; height:740px;
+    background:linear-gradient(160deg,var(--blue-1),var(--blue-dark));
+    border-radius:36px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    overflow:hidden;
+    position:relative;
+    border:8px solid #0e1020;
+  }
+  .screen{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    color:var(--text-light);
+    opacity:0;
+    transition:opacity .25s ease;
+  }
+  .screen.active{display:flex; opacity:1;}
+
+  /* ===== top bar shared ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 6px;
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--text-light);
+  }
+  .topbar .back{cursor:pointer; font-size:16px; letter-spacing:0;}
+  .brand{
+    text-align:center; font-size:14px; letter-spacing:3px; text-transform:uppercase;
+    padding:14px 0 4px; opacity:.9;
+  }
+
+  /* ===== welcome screen ===== */
+  .welcome{align-items:center; justify-content:center; text-align:center; gap:26px; padding:40px;}
+  .welcome h1{
+    font-size:30px; font-weight:300; letter-spacing:4px; line-height:1.7; margin:0;
+    text-transform:uppercase;
+  }
+  .btn{
+    background:#f4f4fa; color:#22254a;
+    border:none; border-radius:6px;
+    padding:12px 26px; font-size:12px; letter-spacing:2px;
+    text-transform:uppercase; cursor:pointer; font-weight:600;
+    box-shadow:0 4px 10px rgba(0,0,0,.25);
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-purple{background:var(--purple); color:#fff;}
+  .btn-block{width:100%; padding:13px; border-radius:8px;}
+
+  /* ===== form-ish centered screens (login/phone/otp) ===== */
+  .center-form{align-items:center; justify-content:center; gap:16px; padding:30px 34px;}
+  .center-form .label{font-size:11px; letter-spacing:2px; opacity:.85; margin-bottom:-6px;}
+  input{
+    width:100%; padding:12px 14px; border-radius:6px; border:none;
+    background:#e9eaf2; color:#333; font-size:13px; outline:none;
+  }
+  .field-wrap{width:100%; display:flex; flex-direction:column; gap:6px; align-items:flex-start;}
+
+  /* ===== app screens with bottom nav ===== */
+  .app-screen{padding-bottom:0;}
+  .app-top{
+    display:flex; align-items:center; gap:10px; padding:14px 16px 6px;
+    font-size:13px;
+  }
+  .app-top .back{font-size:16px; cursor:pointer;}
+  .app-title{flex:1; text-align:center; letter-spacing:3px; font-size:14px; text-transform:uppercase; padding-right:20px;}
+  .content{
+    flex:1; background:var(--card-bg); margin:10px 12px; border-radius:14px;
+    padding:16px; color:#22254a; overflow-y:auto;
+  }
+  .content::-webkit-scrollbar{display:none;}
+  .bottom-nav{
+    display:flex; justify-content:space-around; align-items:center;
+    padding:12px 0; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+    background:rgba(0,0,0,.15); color:#cfd3ff;
+  }
+  .bottom-nav span{cursor:pointer;}
+  .bottom-nav span.active{color:#fff; font-weight:700;}
+
+  /* home dashboard */
+  .balance-card{
+    background:linear-gradient(135deg,#3a49e8,#5a3fe0);
+    border-radius:12px; padding:16px; color:#fff; margin-bottom:14px;
+  }
+  .balance-card .avail{font-size:10px; letter-spacing:1px; opacity:.8;}
+  .balance-card .amount{font-size:26px; font-weight:700; margin:4px 0 12px;}
+  .row-between{display:flex; justify-content:space-between; align-items:center;}
+  .chip-btn{
+    background:#fff; color:#3a2fd0; font-size:10px; font-weight:700;
+    padding:7px 14px; border-radius:16px; border:none; letter-spacing:1px;
+  }
+  .icon-row{display:flex; gap:14px; margin:14px 0 6px;}
+  .icon-circle{
+    width:38px; height:38px; border-radius:50%; background:#3a49e8;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;
+  }
+  .terms-box{
+    background:#fff; border-radius:10px; padding:12px; font-size:11px; color:#555;
+    margin-top:10px; line-height:1.5;
+  }
+  .terms-box b{color:#22254a; font-size:12px;}
+
+  /* form list screen (basic info etc) */
+  .form-list .field{
+    display:flex; justify-content:space-between; align-items:center;
+    background:#fff; border-radius:8px; padding:12px 14px; margin-bottom:10px;
+    font-size:12.5px; font-weight:600; color:#333; cursor:pointer;
+  }
+  .form-list .field .chev{color:#999; font-weight:400;}
+  .form-list .section-label{font-size:10px; letter-spacing:1px; color:#888; margin:6px 2px;}
+  .full-input{
+    background:#fff; border-radius:8px; padding:12px 14px; margin-bottom:10px;
+  }
+  .full-input input{background:transparent; padding:0; font-size:12.5px;}
+
+  /* option list screens (purpose, education, address, credits, profession, ID) */
+  .option-list{display:flex; flex-direction:column; gap:8px;}
+  .option{
+    background:#fff; border-radius:8px; padding:13px 14px; font-size:13px;
+    color:#333; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  }
+  .option:active, .option.selected{background:#dfe1f5;}
+
+  /* contact references */
+  .ref-field{margin-bottom:14px;}
+  .ref-label{font-size:11px; color:#666; margin-bottom:4px; font-weight:600;}
+
+  /* loan amount / months buttons */
+  .amount-btn, .month-btn{
+    width:100%; background:#3a49e8; color:#fff; border:none; border-radius:8px;
+    padding:14px; margin-bottom:10px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .amount-btn:active, .month-btn:active{background:#5a3fe0;}
+
+  /* bank select */
+  .bank-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:6px 0;}
+  .bank-logo{
+    background:#fff; border-radius:10px; padding:18px 8px; display:flex; flex-direction:column;
+    align-items:center; gap:6px; font-size:11px; font-weight:700; color:#333; cursor:pointer;
+  }
+  .bank-logo .dot{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:800;}
+
+  /* approval message */
+  .approval-msg{
+    flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:40px; font-size:16px; line-height:1.7; color:var(--text-light); font-weight:300;
+  }
+
+  /* buy screen */
+  .buy-screen .content{display:flex; flex-direction:column; gap:12px;}
+  .avatar-box{
+    background:#fff; border-radius:10px; height:120px; margin:4px 0;
+  }
+
+  .field .val{color:#888; font-weight:400; font-size:11.5px; max-width:150px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .err{color:#ff6b6b; font-size:10.5px; text-align:center; min-height:14px; margin:4px 0 0;}
+  .amount-btn.selected, .month-btn.selected{background:var(--purple); box-shadow:0 0 0 2px #fff inset;}
+  .bank-logo.selected{box-shadow:0 0 0 2px var(--purple) inset;}
+  .note{font-size:10.5px; color:#666; text-align:center; padding:0 20px; margin-top:6px;}
+  input:disabled{background:#dcdde6; color:#999; cursor:not-allowed;}
+
+  .info-row{
+    display:flex; justify-content:space-between; align-items:center;
+    background:#fff; border-radius:8px; padding:12px 14px; margin-bottom:8px;
+    font-size:12px; color:#333;
+  }
+  .info-row .val{color:#22254a; font-weight:600; text-align:right;}
+  .avatar-circle{
+    width:64px; height:64px; border-radius:50%; background:#3a49e8; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700;
+  }
+
+  .capture-box{
+    background:#fff; border-radius:12px; border:2px dashed #b9bce0;
+    min-height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; color:#888; font-size:12px; cursor:pointer; overflow:hidden; text-align:center; padding:10px;
+  }
+  .capture-box img{width:100%; height:100%; object-fit:cover; border-radius:10px;}
+  .capture-icon{font-size:30px;}
+  .capture-actions{display:flex; gap:10px; margin-top:12px;}
+  .capture-actions button{flex:1;}
+  .btn-outline{background:transparent; color:#fff; border:1px solid #cfd3ff;}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- 1. WELCOME -->
+  <div class="screen active welcome" data-screen="welcome">
+    <h1>Welcome<br>to<br>Money Loan</h1>
+    <button class="btn" onclick="go('login')">Get Started</button>
+  </div>
+
+  <!-- 2. LOGIN -->
+  <div class="screen center-form" data-screen="login">
+    <div class="brand">Money Loan</div>
+    <div style="flex:1"></div>
+    <div class="field-wrap"><div class="label">EMAIL</div><input id="loginEmail" type="email"></div>
+    <div class="field-wrap"><div class="label">PASSWORD</div><input id="loginPassword" type="password"></div>
+    <button class="btn" style="margin-top:10px;" onclick="submitLogin()">Login</button>
+    <div class="err" id="loginErr"></div>
+    <div style="flex:1"></div>
+  </div>
+
+  <!-- 3. PHONE NUMBER -->
+  <div class="screen center-form" data-screen="phone">
+    <div class="brand">Money Loan</div>
+    <div style="flex:1"></div>
+    <div class="field-wrap"><div class="label">ENTER PHONE NUMBER</div><input id="phoneNumber" type="tel"></div>
+    <button class="btn" style="margin-top:10px;" onclick="submitPhone()">Enter</button>
+    <div class="err" id="phoneErr"></div>
+    <div style="flex:1"></div>
+  </div>
+
+  <!-- 4. OTP -->
+  <div class="screen center-form" data-screen="otp">
+    <div class="brand">Money Loan</div>
+    <div style="flex:1"></div>
+    <div class="field-wrap"><div class="label">OTP</div><input id="otpInput" type="text" maxlength="6"></div>
+    <div class="note" id="otpHint"></div>
+    <button class="btn" style="margin-top:10px;" onclick="submitOtp()">Send</button>
+    <div class="err" id="otpErr"></div>
+    <div style="flex:1"></div>
+  </div>
+
+  <!-- 5. HOME DASHBOARD -->
+  <div class="screen app-screen" data-screen="home">
+    <div class="app-top" style="justify-content:center;"><div class="app-title" style="padding:0;">Money Loan</div></div>
+    <div class="content">
+      <div class="balance-card">
+        <div class="avail" id="availLabel">Highest available</div>
+        <div class="amount" id="availAmount">$ 50,000</div>
+        <div class="row-between">
+          <div style="font-size:10px; opacity:.85;">Interest rate<br><b style="font-size:12px;">0.035%/day</b></div>
+          <div style="font-size:10px; opacity:.85; text-align:right;">Result in<br><b style="font-size:12px;">Instant</b></div>
+          <button class="chip-btn" onclick="go('basicinfo')">Get Credit Limit</button>
+        </div>
+      </div>
+      <div style="font-size:10px; color:#666; margin-bottom:10px;">Amount will be increased by repeat borrowing</div>
+      <div class="icon-row">
+        <div class="icon-circle">🛡️</div>
+        <div class="icon-circle">🕒</div>
+        <div class="icon-circle">🔒</div>
+        <div class="icon-circle">🛡️</div>
+      </div>
+      <div class="row-between" style="font-size:11px; color:#333; font-weight:700;">
+        <span>Subject to<br>Money Loan</span>
+        <span>5 years</span>
+        <span>10 Million+</span>
+        <span>Total downloads</span>
+      </div>
+      <div class="terms-box">
+        This is a sample interest rate. Actual terms may vary depending on your credit profile and are subject to approval. Please review the loan agreement carefully before proceeding.
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <span class="active">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span>
+    </div>
+  </div>
+
+  <!-- placeholder Bill / Me screens (reuse home shell) -->
+  <div class="screen app-screen" data-screen="bill">
+    <div class="app-top" style="justify-content:center;"><div class="app-title" style="padding:0;">Money Loan</div></div>
+    <div class="content" id="billContent"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span class="active">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+  <div class="screen app-screen" data-screen="me">
+    <div class="app-top" style="justify-content:center;"><div class="app-title" style="padding:0;">Money Loan</div></div>
+    <div class="content" id="meContent"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span class="active">Me</span></div>
+  </div>
+
+  <!-- 6. BASIC INFORMATION FORM -->
+  <div class="screen app-screen" data-screen="basicinfo">
+    <div class="app-top"><span class="back" onclick="go('home')">&laquo;</span><div class="app-title">Basic&nbsp;&nbsp;Contact&nbsp;&nbsp;ID</div></div>
+    <div class="content form-list">
+      <div class="section-label">Personal Information</div>
+      <div class="field" onclick="go('purpose')">Purpose of loan <span class="val" id="val-purpose"></span><span class="chev">&rsaquo;</span></div>
+      <div class="field" onclick="go('education')">Education Level <span class="val" id="val-education"></span><span class="chev">&rsaquo;</span></div>
+      <div class="field" onclick="go('address')">Residential Address <span class="val" id="val-address"></span><span class="chev">&rsaquo;</span></div>
+      <div class="full-input"><input id="completeAddress" placeholder="Please Enter Complete Address"></div>
+      <div class="field" onclick="go('credits')">Number of Credits <span class="val" id="val-credits"></span><span class="chev">&rsaquo;</span></div>
+      <div class="full-input"><input id="basicEmail" placeholder="Email" type="email"></div>
+      <div class="section-label">Work Information</div>
+      <div class="field" onclick="go('profession')">Profession <span class="val" id="val-profession"></span><span class="chev">&rsaquo;</span></div>
+    </div>
+    <div class="err" id="basicinfoErr"></div>
+    <button class="btn btn-purple" style="margin:0 12px 10px; border-radius:0 0 0 0;" onclick="submitBasicInfo()">Next</button>
+    <div style="text-align:center; font-size:9px; color:#cfd3ff; padding-bottom:6px;">Used for verification only</div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 7. PURPOSE OF LOAN -->
+  <div class="screen app-screen" data-screen="purpose">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="purposeList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 8. EDUCATION -->
+  <div class="screen app-screen" data-screen="education">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="educationList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 9. RESIDENTIAL ADDRESS -->
+  <div class="screen app-screen" data-screen="address">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="addressList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 10. NUMBER OF CREDITS -->
+  <div class="screen app-screen" data-screen="credits">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="creditsList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 11. PROFESSION -->
+  <div class="screen app-screen" data-screen="profession">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="professionList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 12. CONTACT REFERENCES -->
+  <div class="screen app-screen" data-screen="contactref">
+    <div class="app-top"><span class="back" onclick="go('basicinfo')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content">
+      <div class="ref-field"><div class="ref-label">Contact Information</div></div>
+      <div class="ref-field"><div class="ref-label">Contact Reference 1</div><div class="full-input"><input id="ref1"></div></div>
+      <div class="ref-field"><div class="ref-label">Contact Reference 2</div><div class="full-input"><input id="ref2"></div></div>
+      <div class="ref-field"><div class="ref-label">Contact Reference 3</div><div class="full-input"><input id="ref3"></div></div>
+    </div>
+    <div class="err" id="contactrefErr"></div>
+    <button class="btn btn-purple" style="margin:0 12px 10px;" onclick="submitContactRef()">Next</button>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 13. VALID ID -->
+  <div class="screen app-screen" data-screen="validid">
+    <div class="app-top"><span class="back" onclick="go('contactref')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content option-list" id="validIdList"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 13b. ID PHOTO CAPTURE -->
+  <div class="screen app-screen" data-screen="idcapture">
+    <div class="app-top"><span class="back" onclick="go('validid')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content">
+      <div class="section-label" id="idCaptureLabel" style="margin-bottom:8px;">Take a photo of your ID</div>
+      <label class="capture-box" id="captureBox">
+        <span class="capture-icon">📷</span>
+        <span>Tap to take a picture or upload from gallery</span>
+        <input type="file" id="idPhotoInput" accept="image/*" capture="environment" style="display:none;">
+      </label>
+      <div class="err" id="idCaptureErr"></div>
+      <div class="capture-actions" id="captureActions" style="display:none;">
+        <button class="btn btn-outline" onclick="retakePhoto()">Retake</button>
+        <button class="btn btn-purple" onclick="confirmIdPhoto()">Continue</button>
+      </div>
+    </div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 14. LOAN AMOUNT -->
+  <div class="screen app-screen" data-screen="loanamount">
+    <div class="app-top"><span class="back" onclick="go('idcapture')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content" id="loanAmountList" style="display:flex; flex-direction:column;"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 15. CHOOSE MONTH TO PAY -->
+  <div class="screen app-screen" data-screen="months">
+    <div class="app-top"><span class="back" onclick="go('loanamount')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content" id="monthsList" style="display:flex; flex-direction:column;"></div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 16. BANK SELECT -->
+  <div class="screen app-screen" data-screen="banks">
+    <div class="app-top"><span class="back" onclick="go('months')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div class="content">
+      <div class="bank-grid" id="bankGrid">
+        <div class="bank-logo" data-bank="GCash"><div class="dot" style="background:#0074e4;">G</div>GCash</div>
+        <div class="bank-logo" data-bank="Maya"><div class="dot" style="background:#111;">M</div>Maya</div>
+        <div class="bank-logo" data-bank="BDO Unibank"><div class="dot" style="background:#0033a0;">B</div>BDO Unibank</div>
+        <div class="bank-logo" data-bank="LandBank"><div class="dot" style="background:#e11d2e;">L</div>LandBank</div>
+        <div class="bank-logo" data-bank="Palawan"><div class="dot" style="background:#7ac142;">P</div>Palawan</div>
+        <div class="bank-logo" data-bank="Cebuana"><div class="dot" style="background:#009540;">C</div>Cebuana</div>
+      </div>
+    </div>
+    <div class="bottom-nav"><span onclick="go('home')">Home</span><span onclick="go('bill')">Bill</span><span onclick="go('me')">Me</span></div>
+  </div>
+
+  <!-- 17. BANK ACCOUNT DETAIL -->
+  <div class="screen center-form" data-screen="bankdetail">
+    <div class="app-top" style="width:100%; box-sizing:border-box;"><span class="back" onclick="go('banks')">&laquo;</span><div class="app-title">Money Loan</div></div>
+    <div style="flex:1"></div>
+    <div class="brand" id="bankSelectedLabel">Sending to</div>
+    <div class="field-wrap"><div class="label">ACCOUNT NUMBER</div><input id="bankAccountNumber" type="text" placeholder="Enter account number"></div>
+    <div class="field-wrap"><div class="label">MOBILE OTP</div><input id="bankOtp" type="text" maxlength="6" placeholder="6-digit code"></div>
+    <div class="note">For your protection this demo confirms disbursement with a one-time code instead of your account password — a real app should never ask for that.</div>
+    <button class="btn btn-purple" style="margin-top:10px;" onclick="submitBankDetail()">Send</button>
+    <div class="err" id="bankErr"></div>
+    <div style="flex:1"></div>
+  </div>
+
+  <!-- 18. APPROVED -->
+  <div class="screen" data-screen="approved">
+    <div class="approval-msg" id="approvalMsg">Your loan has been approved! Please wait the money to be sent to your account. You will receive confirmation message once the transaction is completed. Thank you your patience!</div>
+    <button class="btn btn-purple" style="margin:0 40px 30px;" onclick="go('home')">OK</button>
+  </div>
+
+</div>
+
+<script>
+  /* ===================== STATE ===================== */
+  const state = {
+    email:'', phone:'', otp:'', fullName:'',
+    purpose:'', education:'', address:'', completeAddress:'', credits:'', email2:'', profession:'',
+    ref1:'', ref2:'', ref3:'',
+    validId:'', idPhoto:'', amount:'', months:'', bank:'', accountNumber:'', bankOtp:''
+  };
+  let editingProfile = false;
+
+  /* ===================== NAVIGATION ===================== */
+  const screens = document.querySelectorAll('.screen');
+  function go(name){
+    screens.forEach(s=>s.classList.toggle('active', s.dataset.screen===name));
+    if(name==='bill') renderBill();
+    if(name==='me') renderMe();
+    const el = document.querySelector(`[data-screen="${name}"] input`);
+    if(el) setTimeout(()=>el.focus(), 50);
+  }
+  function clearErr(id){ const e=document.getElementById(id); if(e) e.textContent=''; }
+  function showErr(id, msg){ const e=document.getElementById(id); if(e) e.textContent = msg; }
+
+  /* ===================== LOGIN / PHONE / OTP ===================== */
+  function submitLogin(){
+    clearErr('loginErr');
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw = document.getElementById('loginPassword').value;
+    if(!email || !email.includes('@')){ showErr('loginErr','Enter a valid email'); return; }
+    if(!pw){ showErr('loginErr','Enter your password'); return; }
+    state.email = email;
+    go('phone');
+  }
+  function submitPhone(){
+    clearErr('phoneErr');
+    const phone = document.getElementById('phoneNumber').value.trim();
+    if(phone.length < 7){ showErr('phoneErr','Enter a valid phone number'); return; }
+    state.phone = phone;
+    // simulate sending an OTP
+    state._sentOtp = String(Math.floor(100000 + Math.random()*900000));
+    document.getElementById('otpHint').textContent = `Demo code: ${state._sentOtp}`;
+    go('otp');
+  }
+  function submitOtp(){
+    clearErr('otpErr');
+    const otp = document.getElementById('otpInput').value.trim();
+    if(!otp){ showErr('otpErr','Enter the code we sent you'); return; }
+    if(otp !== state._sentOtp){ showErr('otpErr','Incorrect code, check the hint above'); return; }
+    state.otp = otp;
+    go('home');
+  }
+
+  /* ===================== OPTION LIST BUILDER ===================== */
+  function buildOptions(containerId, items, stateKey, valueElId){
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    items.forEach(label=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.textContent = label;
+      if(state[stateKey] === label) div.classList.add('selected');
+      div.onclick = ()=>{
+        state[stateKey] = label;
+        if(valueElId) document.getElementById(valueElId).textContent = label;
+        go('basicinfo');
+      };
+      el.appendChild(div);
+    });
+  }
+  function renderOptionScreens(){
+    buildOptions('purposeList', [
+      'Business Development','Emergency','Housing','Medical','Education',
+      'Travel','Debt Consolidation','Credit Card','Loans','General Expenses','Others'
+    ], 'purpose', 'val-purpose');
+
+    buildOptions('educationList', [
+      'Primary/Grade School','Secondary/High School','Certificate/Vocational Course',
+      'Bachelor Degree','Master Degree','Doctorate'
+    ], 'education', 'val-education');
+
+    buildOptions('addressList', [
+      'Region 1','Region 2','Region 3','Region 4','Region 5',
+      'Region 6','Region 7','Region 8','Region 9','Region 10'
+    ], 'address', 'val-address');
+
+    buildOptions('creditsList', ['0','1','2','3','3+'], 'credits', 'val-credits');
+
+    buildOptions('professionList', [
+      'Self employed/Business Owner/Freelance','BPO Worker','Government Employee',
+      'Contract Worker','Construction Worker','Student','Unemployed','OFW','Others'
+    ], 'profession', 'val-profession');
+  }
+  renderOptionScreens();
+
+  /* ===================== BASIC INFO ===================== */
+  document.getElementById('completeAddress').addEventListener('input', e=> state.completeAddress = e.target.value);
+  document.getElementById('basicEmail').addEventListener('input', e=> state.email2 = e.target.value);
+
+  function submitBasicInfo(){
+    clearErr('basicinfoErr');
+    state.completeAddress = document.getElementById('completeAddress').value.trim();
+    state.email2 = document.getElementById('basicEmail').value.trim();
+    const required = ['purpose','education','address','completeAddress','credits','email2','profession'];
+    const missing = required.find(k => !state[k]);
+    if(missing){ showErr('basicinfoErr','Please complete every field before continuing'); return; }
+    go('contactref');
+  }
+
+  /* ===================== CONTACT REFERENCES ===================== */
+  function submitContactRef(){
+    clearErr('contactrefErr');
+    state.ref1 = document.getElementById('ref1').value.trim();
+    state.ref2 = document.getElementById('ref2').value.trim();
+    state.ref3 = document.getElementById('ref3').value.trim();
+    if(!state.ref1 || !state.ref2 || !state.ref3){
+      showErr('contactrefErr','Please enter all three contact references');
+      return;
+    }
+    go('validid');
+  }
+
+  /* ===================== VALID ID ===================== */
+  (function(){
+    const el = document.getElementById('validIdList');
+    ["License","National ID","Voter's ID","Student ID","Passport ID"].forEach(label=>{
+      const div = document.createElement('div');
+      div.className = 'option';
+      div.textContent = label;
+      div.onclick = ()=>{
+        state.validId = label;
+        document.getElementById('idCaptureLabel').textContent = `Take a photo of your ${label}`;
+        go('idcapture');
+      };
+      el.appendChild(div);
+    });
+  })();
+
+  /* ===================== ID PHOTO CAPTURE ===================== */
+  const idPhotoInput = document.getElementById('idPhotoInput');
+  const captureBox = document.getElementById('captureBox');
+  idPhotoInput.addEventListener('change', ()=>{
+    const file = idPhotoInput.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e=>{
+      state.idPhoto = e.target.result;
+      captureBox.innerHTML = `<img src="${state.idPhoto}" alt="ID preview">`;
+      document.getElementById('captureActions').style.display = 'flex';
+      document.getElementById('idCaptureErr').textContent = '';
+    };
+    reader.readAsDataURL(file);
+  });
+  function retakePhoto(){
+    state.idPhoto = '';
+    captureBox.innerHTML = `
+      <span class="capture-icon">📷</span>
+      <span>Tap to take a picture or upload from gallery</span>`;
+    captureBox.appendChild(idPhotoInput);
+    document.getElementById('captureActions').style.display = 'none';
+    idPhotoInput.value = '';
+  }
+  function confirmIdPhoto(){
+    if(!state.idPhoto){
+      document.getElementById('idCaptureErr').textContent = 'Please take or upload a photo first';
+      return;
+    }
+    go('loanamount');
+  }
+
+  /* ===================== LOAN AMOUNT ===================== */
+  (function(){
+    const amounts = ['1,000-10,000','10,000-20,000','20,000-30,000','30,000-40,000','40,000-50,000'];
+    const amountEl = document.getElementById('loanAmountList');
+    amounts.forEach(a=>{
+      const b = document.createElement('button');
+      b.className='amount-btn'; b.textContent=a;
+      b.onclick=()=>{ state.amount = a; go('months'); };
+      amountEl.appendChild(b);
+    });
+  })();
+
+  /* ===================== REPAYMENT TERM ===================== */
+  (function(){
+    const months = ['1-3 Months','3-6 Months','6-9 Months','9-12 Months'];
+    const monthsEl = document.getElementById('monthsList');
+    months.forEach(m=>{
+      const b = document.createElement('button');
+      b.className='month-btn'; b.textContent=m;
+      b.onclick=()=>{ state.months = m; go('banks'); };
+      monthsEl.appendChild(b);
+    });
+  })();
+
+  /* ===================== BANK SELECT ===================== */
+  document.getElementById('bankGrid').addEventListener('click', e=>{
+    const card = e.target.closest('.bank-logo');
+    if(!card) return;
+    state.bank = card.dataset.bank;
+    document.getElementById('bankSelectedLabel').textContent = `Sending to ${state.bank}`;
+    go('bankdetail');
+  });
+
+  function submitBankDetail(){
+    clearErr('bankErr');
+    const acct = document.getElementById('bankAccountNumber').value.trim();
+    const otp = document.getElementById('bankOtp').value.trim();
+    if(!acct){ showErr('bankErr','Enter your account number'); return; }
+    if(!otp || otp.length < 4){ showErr('bankErr','Enter the code sent to your phone'); return; }
+    state.accountNumber = acct;
+    state.bankOtp = otp;
+
+    const amountLabel = state.amount ? `₱${state.amount}` : 'the requested amount';
+    document.getElementById('approvalMsg').textContent =
+      `Your loan has been approved! ${amountLabel} will be sent to your ${state.bank} account ending in ${acct.slice(-4)}, ` +
+      `over ${state.months || 'the selected term'}. You'll get a confirmation message once the transfer completes. Thank you for your patience!`;
+    go('approved');
+  }
+
+  /* ===================== BILL ===================== */
+  function parseRangeAvg(str){
+    if(!str) return 0;
+    const nums = str.replace(/,/g,'').match(/\d+/g);
+    if(!nums) return 0;
+    const vals = nums.map(Number);
+    return vals.reduce((a,b)=>a+b,0) / vals.length;
+  }
+  function renderBill(){
+    const el = document.getElementById('billContent');
+    if(!state.bank || !state.accountNumber){
+      el.innerHTML = `
+        <div style="text-align:center; color:#777; padding:40px 14px;">
+          <div style="font-size:13px; margin-bottom:14px;">You don't have an active loan yet.</div>
+          <button class="btn btn-purple" onclick="go('home')">Apply for a Loan</button>
+        </div>`;
+      return;
+    }
+    const principal = parseRangeAvg(state.amount);
+    const termMonths = Math.max(1, Math.round(parseRangeAvg(state.months)));
+    const interest = principal * 0.05 * termMonths; // demo flat rate, not a real calculation
+    const total = principal + interest;
+    const monthly = total / termMonths;
+
+    let rows = '';
+    const today = new Date();
+    for(let i=1; i<=termMonths; i++){
+      const due = new Date(today);
+      due.setMonth(due.getMonth()+i);
+      const dueStr = due.toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'});
+      const status = i===1 ? 'Due next' : 'Upcoming';
+      rows += `
+        <div class="info-row">
+          <span>Installment ${i} &middot; ${dueStr}</span>
+          <span class="val">&#8369;${monthly.toFixed(0)} <span style="font-weight:400;color:${i===1?'#c0392b':'#999'}; font-size:10px;">(${status})</span></span>
+        </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="balance-card" style="margin-bottom:14px;">
+        <div class="avail">Active Loan &middot; ${state.bank}</div>
+        <div class="amount">&#8369;${principal.toLocaleString()}</div>
+        <div class="row-between" style="font-size:10px; opacity:.85;">
+          <span>Term: ${state.months}</span>
+          <span>Total to pay: &#8369;${total.toFixed(0)}</span>
+        </div>
+      </div>
+      <div class="section-label" style="margin-bottom:8px;">Payment Schedule</div>
+      ${rows}
+    `;
+  }
+
+  /* ===================== PROFILE (ME) ===================== */
+  function renderMe(){
+    const el = document.getElementById('meContent');
+    if(!state.fullName || editingProfile){
+      el.innerHTML = `
+        <div class="section-label" style="margin-bottom:8px;">${state.fullName ? 'Edit Profile' : 'Create Your Profile'}</div>
+        <div class="full-input"><input id="meFullName" placeholder="Full Name" value="${state.fullName||''}"></div>
+        <div class="full-input"><input id="meEmail" type="email" placeholder="Email" value="${state.email||''}"></div>
+        <div class="full-input"><input id="mePhone" type="tel" placeholder="Phone Number" value="${state.phone||''}"></div>
+        <div class="full-input"><input id="meAddress" placeholder="Address" value="${state.completeAddress||''}"></div>
+        <div class="err" id="meErr"></div>
+        <button class="btn btn-purple" style="width:100%;" onclick="saveProfile()">Save Profile</button>
+      `;
+      return;
+    }
+    const initials = state.fullName.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    el.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px; padding:6px 0 18px;">
+        <div class="avatar-circle">${initials}</div>
+        <div style="font-weight:700; font-size:15px; color:#22254a;">${state.fullName}</div>
+        <div style="font-size:11px; color:#777;">${state.email || 'No email on file'}</div>
+      </div>
+      <div class="info-row"><span>Phone</span><span class="val">${state.phone || '—'}</span></div>
+      <div class="info-row"><span>Address</span><span class="val">${state.completeAddress || '—'}</span></div>
+      <div class="info-row"><span>Profession</span><span class="val">${state.profession || '—'}</span></div>
+      <div class="info-row"><span>Education</span><span class="val">${state.education || '—'}</span></div>
+      <div class="info-row"><span>Valid ID</span><span class="val">${state.validId || '—'}</span></div>
+      <button class="btn btn-purple" style="width:100%; margin-top:10px;" onclick="editingProfile=true; renderMe();">Edit Profile</button>
+    `;
+  }
+  function saveProfile(){
+    const name = document.getElementById('meFullName').value.trim();
+    const email = document.getElementById('meEmail').value.trim();
+    const phone = document.getElementById('mePhone').value.trim();
+    const addr = document.getElementById('meAddress').value.trim();
+    if(!name){
+      document.getElementById('meErr').textContent = 'Please enter your full name';
+      return;
+    }
+    state.fullName = name;
+    state.email = email;
+    state.phone = phone;
+    state.completeAddress = addr;
+    editingProfile = false;
+    renderMe();
+  }
+
+  /* ===================== RESET ===================== */
+  function resetApp(){
+    Object.keys(state).forEach(k => state[k] = (typeof state[k]==='string' ? '' : state[k]));
+    editingProfile = false;
+    document.querySelectorAll('input').forEach(i => i.value = '');
+    document.querySelectorAll('.val').forEach(v => v.textContent = '');
+    document.getElementById('otpHint').textContent = '';
+    ['loginErr','phoneErr','otpErr','basicinfoErr','contactrefErr','bankErr','idCaptureErr'].forEach(clearErr);
+    retakePhoto();
+    renderOptionScreens();
+    go('welcome');
+  }
+</script>
+</body>
+</html>
